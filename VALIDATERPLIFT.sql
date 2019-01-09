@@ -1,10 +1,8 @@
-
-
-
 create or replace PROCEDURE VALIDATERPLIFT(INPUT_VAL IN XMLTYPE, STATUS_VAL OUT VARCHAR2) AS 
 rrn VARCHAR2(100 CHAR);
 pid VARCHAR2(100 CHAR);
 status VARCHAR2(100 CHAR);
+srvcCode VARCHAR2(100 CHAR);
 BEGIN
 
 STATUS_VAL:='VALID';
@@ -32,7 +30,7 @@ FOR r IN
    LOOP
    begin
 
-SELECT RRN  , STATUS,REQSTR_CD into rrn,status,pid
+SELECT RRN  , STATUS,REQSTR_CD,SRVC_TYPE_CD into rrn,status,pid,srvcCode
 FROM EXEC_SUMMARY
 WHERE EXEC_SUMMARY.SRVC_REQST_SRN = r.srn;
 
@@ -49,6 +47,11 @@ STATUS_VAL:= 'INVALID_Requester_CD';
 ELSif (status !=  r.status)
 THEN
 STATUS_VAL:= 'INVALID_Lift_Status';
+
+ELSif (STATUS_VAL =  'VALID')
+then
+STATUS_VAL:= srvcCode;
+
 END IF;
 
 

@@ -36,7 +36,7 @@ FOR r IN
 SELECT  RRN  , STATUS,REQSTR_CD,SRVC_TYPE_CD,CAST(AVAILABLE_AMT AS float) avail_amt into rrn,status,pid,srvcCode,amt
 FROM EXEC_SUMMARY
 WHERE EXEC_SUMMARY.SRVC_REQST_SRN = r.srn;
-
+DBMS_OUTPUT.PUT_LINE('amt = ' ||  r.AMT);
 IF (rrn !=  r.rrn)
 THEN
 
@@ -54,22 +54,23 @@ STATUS_VAL:= 'INVALID_Lift_Status';
 
 
 
-ELSif (amt !=  '' and amt != null )
+ELSif ( r.AMT is not null )
 then
+DBMS_OUTPUT.PUT_LINE('amt cond');
 if(r.AMT>amt)
 then
 STATUS_VAL:= 'INVALID_AMOUNT';
 end if;
 
-ELSif (STATUS_VAL =  'VALID')
-then
-STATUS_VAL:= srvcCode;
+
 
 END IF;
 
 
-
-
+if (STATUS_VAL =  'VALID')
+then
+STATUS_VAL:= srvcCode;
+END IF;
 
 
 

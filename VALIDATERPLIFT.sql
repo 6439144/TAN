@@ -4,6 +4,8 @@ pid VARCHAR2(100 CHAR);
 status VARCHAR2(100 CHAR);
 srvcCode VARCHAR2(100 CHAR);
 amt float;
+execSumID  number;
+runTotCount number;
 
 BEGIN
 
@@ -33,7 +35,7 @@ FOR r IN
    LOOP
    begin
 
-SELECT  RRN  , STATUS,REQSTR_CD,SRVC_TYPE_CD,CAST(AVAILABLE_AMT AS float) avail_amt into rrn,status,pid,srvcCode,amt
+SELECT  RRN  , STATUS,REQSTR_CD,SRVC_TYPE_CD,CAST(AVAILABLE_AMT AS float) avail_amt,EXEC_SUMMARY_ID into rrn,status,pid,srvcCode,amt,execSumID
 FROM EXEC_SUMMARY
 WHERE EXEC_SUMMARY.SRVC_REQST_SRN = r.srn;
 DBMS_OUTPUT.PUT_LINE('amt = ' ||  r.AMT);
@@ -69,7 +71,29 @@ END IF;
 
 if (STATUS_VAL =  'VALID')
 then
-STATUS_VAL:= srvcCode;
+DBMS_OUTPUT.PUT_LINE('Valid case return select ' || execSumID);
+
+SELECT count(*) into runTotCount
+FROM EXEC_RUNNING_TOTALS exTot
+WHERE exTot.EXEC_SUMMARY_ID = execSumID;
+
+if (runTotCount=1)
+then
+SELECT XMLELEMENT("PrevBlockData",XMLELEMENT("exec_running_totals_id",exTot.EXEC_RUNNING_TOTALS_ID),
+XMLELEMENT("exec_summary_id",exTot.EXEC_SUMMARY_ID),
+XMLELEMENT("fin_inst_cd",exTot.FIN_INST_CD),
+XMLELEMENT("acc_num",exTot.ACC_NUM),
+XMLELEMENT("acc_currency",exTot.ACC_CURRENCY),
+XMLELEMENT("available_amt",exTot.AVAILABLE_AMT),
+XMLELEMENT("available_amt",exTot.AVAILABLE_AMT),
+XMLELEMENT("srvcCode",srvcCode)) .GETCLOBVAL()
+into STATUS_VAL
+FROM EXEC_RUNNING_TOTALS exTot
+WHERE exTot.EXEC_SUMMARY_ID = execSumID;
+elsif(runTotCount>1)
+then
+STATUS_VAL:=srvcCode;
+end if;
 END IF;
 
 

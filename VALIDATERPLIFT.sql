@@ -39,13 +39,9 @@ SELECT  RRN  , STATUS,REQSTR_CD,SRVC_TYPE_CD,CAST(AVAILABLE_AMT AS float) avail_
 FROM EXEC_SUMMARY
 WHERE EXEC_SUMMARY.SRVC_REQST_SRN = r.srn;
 DBMS_OUTPUT.PUT_LINE('amt = ' ||  r.AMT);
-IF (rrn !=  r.rrn)
+IF (pid !=  r.pid)
 THEN
 
-STATUS_VAL:= 'INVALID_RRN';
-
-ELSIF (pid !=  r.pid)
-THEN
 STATUS_VAL:= 'INVALID_Requester_CD';
 
 
@@ -72,14 +68,14 @@ END IF;
 if (STATUS_VAL =  'VALID')
 then
 DBMS_OUTPUT.PUT_LINE('Valid case return select ' || execSumID);
-
-SELECT count(*) into runTotCount
+STATUS_VAL:='VALID,'||srvcCode||','||execSumID;
+/*SELECT count(*) into runTotCount
 FROM EXEC_RUNNING_TOTALS exTot
 WHERE exTot.EXEC_SUMMARY_ID = execSumID;
 
 if (runTotCount=1)
 then
-SELECT XMLELEMENT("PrevBlockData",XMLELEMENT("exec_running_totals_id",exTot.EXEC_RUNNING_TOTALS_ID),
+SELECT XMLELEMENT("exec_running_totals",XMLELEMENT("exec_running_totals_id",exTot.EXEC_RUNNING_TOTALS_ID),
 XMLELEMENT("exec_summary_id",exTot.EXEC_SUMMARY_ID),
 XMLELEMENT("fin_inst_cd",exTot.FIN_INST_CD),
 XMLELEMENT("acc_num",exTot.ACC_NUM),
@@ -93,7 +89,7 @@ WHERE exTot.EXEC_SUMMARY_ID = execSumID;
 elsif(runTotCount>1)
 then
 STATUS_VAL:=srvcCode;
-end if;
+end if;*/
 END IF;
 
 

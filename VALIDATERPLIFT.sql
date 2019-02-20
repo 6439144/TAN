@@ -6,7 +6,10 @@ srvcCode VARCHAR2(100 CHAR);
 amt float;
 execSumID  number;
 runTotCount number;
-
+agcySrvcID number;
+idNO  VARCHAR2(100 CHAR);
+idType   VARCHAR2(100 CHAR);
+NatCD  VARCHAR2(100 CHAR);
 BEGIN
 
 STATUS_VAL:='VALID';
@@ -19,6 +22,12 @@ DBMS_OUTPUT.PUT_LINE('VALIDATERPLIFT Starts');
 	<srn> </srn>
 	<rrn> </rrn>
 	<status> </status>
+  	<invId> </invId>
+
+	<idType> </idType>
+
+	<nalty> </nalty>
+
 </ValidatePrevRPLift>
 */
 
@@ -29,13 +38,16 @@ FOR r IN
       ExtractValue(Value(p),'/ValidatePrevRPLift/srn/text()') As SRN,
       ExtractValue(Value(p),'/ValidatePrevRPLift/rrn/text()')  As RRN,
       ExtractValue(Value(p),'/ValidatePrevRPLift/status/text()')  As STATUS,
-        ExtractValue(Value(p),'/ValidatePrevRPLift/amt/text()')  As AMT
+        ExtractValue(Value(p),'/ValidatePrevRPLift/amt/text()')  As AMT,
+         ExtractValue(Value(p),'/ValidatePrevRPLift/invId/text()')  As INVID,
+          ExtractValue(Value(p),'/ValidatePrevRPLift/idType/text()')  As IDTYPE,
+           ExtractValue(Value(p),'/ValidatePrevRPLift/nalty/text()')  As NALTY
       FROM TABLE(XMLSequence(Extract(INPUT_VAL,'/ValidatePrevRPLift'))) p)
 
    LOOP
    begin
 
-SELECT  RRN  , STATUS,REQSTR_CD,SRVC_TYPE_CD,CAST(AVAILABLE_AMT AS float) avail_amt,EXEC_SUMMARY_ID into rrn,status,pid,srvcCode,amt,execSumID
+SELECT  AGCY_SRVC_REQST_ID,RRN  , STATUS,REQSTR_CD,SRVC_TYPE_CD,CAST(AVAILABLE_AMT AS float) avail_amt,EXEC_SUMMARY_ID into agcySrvcID,rrn,status,pid,srvcCode,amt,execSumID
 FROM EXEC_SUMMARY
 WHERE EXEC_SUMMARY.SRVC_REQST_SRN = r.srn;
 DBMS_OUTPUT.PUT_LINE('amt = ' ||  r.AMT);
@@ -60,6 +72,27 @@ then
 STATUS_VAL:= 'INVALID_AMOUNT';
 end if;
 
+
+ELSif ( r.INVID is not null )
+then
+DBMS_OUTPUT.PUT_LINE('inv Party cond');
+
+select ID_NO,ID_TYPE_CD,NAT_CD into idNO,idType,NatCD from INVOLVED_PARTY where INVOLVED_PARTY.AGCY_SRVC_REQST_ID=agcySrvcID;
+if(r.INVID!=idNO)
+then
+STATUS_VAL:= 'INVALID_INV_ID';
+elsif (r.IDTYPE!=idType)
+then
+STATUS_VAL:= 'INVALID_INV_IDTYPE';
+
+elsif (r.NALTY is not NULL)
+then
+  if(r.NALTY!=NatCD)
+  then
+  STATUS_VAL:= 'INVALID_Nat';
+  end if;
+
+end if;
 
 
 END IF;
